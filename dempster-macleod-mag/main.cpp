@@ -10,7 +10,7 @@
 /*
 Implementation of MAG algorithm described in https://digital-library.theiet.org/content/journals/10.1049/ip-cds_19941191
 Goal - find first integer that can not be representated with 4 adders
-I believe, 32 bits would be enough, to accept the goal.
+I believe, 16 bits would be enough, to accept the goal.
 */
 using namespace std;
 
