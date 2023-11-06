@@ -18,7 +18,7 @@ using namespace std;
 /*
     To not work with overflow
 */
-const uint64_t MAX = 65536;
+const uint64_t MAX = 4194304;
 
 /*
     Global map of integers and their cost
@@ -209,7 +209,7 @@ vector<uint64_t> get3cost(const vector<uint64_t>& cost0, const vector<uint64_t>&
         }
     }
 
-    cout << "Counting combination fo cost2 + cost0 and cost2 + cost2" << endl;
+    cout << "Counting combination of cost2 + cost0 and cost2 + cost2" << endl;
     // combination fo cost2 + cost0 and cost2 + cost2
     for (uint64_t i = 0; i < cost0size; i++) {
         for (uint64_t j = 0; j < cost2size; j++) {
@@ -226,7 +226,7 @@ vector<uint64_t> get3cost(const vector<uint64_t>& cost0, const vector<uint64_t>&
         }
     }
 
-    cout << "Counting combination fo cost2 + fundamental" << endl;
+    cout << "Counting combination of cost2 + fundamental" << endl;
     // combination fo cost2 + fundamental
     for (uint64_t i = 0; i < cost0size; i++) {
         for (uint64_t j = 0; j < cost2size; j++) {
@@ -281,10 +281,10 @@ void add_terminating(uint64_t cost0, uint64_t cost1, vector<pair<uint64_t, uint6
     }
 */
 vector<uint64_t> get4cost(const vector<uint64_t>& cost0, const vector<uint64_t>& cost1, const vector<uint64_t>& cost2, const vector<uint64_t>& cost3) {
-    size_t cost0size = cost0.size();
-    size_t cost1size = cost1.size();
-    size_t cost2size = cost2.size();
-    size_t cost3size = cost3.size();
+    const size_t cost0size = cost0.size();
+    const size_t cost1size = cost1.size();
+    const size_t cost2size = cost2.size();
+    const size_t cost3size = cost3.size();
     vector<uint64_t> cost4;
     cost4.reserve(cost1size * cost1size * cost0size * 8);
 
@@ -306,7 +306,7 @@ vector<uint64_t> get4cost(const vector<uint64_t>& cost0, const vector<uint64_t>&
     }
 
 
-    cout << "Counting combination fo cost3 + cost0 and cost3 + cost3" << endl;
+    cout << "Counting combination of cost3 + cost0 and cost3 + cost3" << endl;
     // combination fo cost3 + cost0 and cost3 + cost3
     for (uint64_t i = 0; i < cost0size; i++) {
         for (uint64_t j = 0; j < cost3size; j++) {
@@ -324,7 +324,7 @@ vector<uint64_t> get4cost(const vector<uint64_t>& cost0, const vector<uint64_t>&
     }
 
 
-    cout << "Counting combination fo cost3 + fundamental" << endl;
+    cout << "Counting combination of cost3 + fundamental" << endl;
     // combination fo cost3 + fundamental
     for (uint64_t i = 0; i < cost0size; i++) {
         for (uint64_t j = 0; j < cost3size; j++) {
@@ -373,20 +373,20 @@ vector<uint64_t> get4cost(const vector<uint64_t>& cost0, const vector<uint64_t>&
 
 int main() {
 
-    vector<uint64_t> cost0 = get0cost(16);
-    cout << "cost0 filled" << endl;
+    vector<uint64_t> cost0 = get0cost(22);
+    cout << "cost0 filled " << cost0.size() << endl;
 
     vector<uint64_t> cost1 = get1cost(cost0);
-    cout << "cost1 filled" << endl;
+    cout << "cost1 filled " << cost1.size() << endl;
 
     vector<uint64_t> cost2 = get2cost(cost0, cost1);
-    cout << "cost2 filled" << endl;
+    cout << "cost2 filled " << cost2.size() << endl;
 
-    vector<uint64_t> cost3 = get3cost(cost0, cost1, cost3);
-    cout << "cost3 filled" << endl;
+    vector<uint64_t> cost3 = get3cost(cost0, cost1, cost2);
+    cout << "cost3 filled " << cost3.size() << endl;
 
-    vector<uint64_t> cost4 = get4cost(cost0, cost1, cost3, cost4);
-    cout << "cost4 filled" << endl;
+    vector<uint64_t> cost4 = get4cost(cost0, cost1, cost2, cost3);
+    cout << "cost4 filled " << cost4.size() << endl;
 
     cout << already_found.size() << endl;
     vector<pair<uint64_t,uint64_t> > ans;
