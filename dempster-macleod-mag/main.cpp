@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <inttypes.h>
 #include <stdint.h>
+#include <set>
 
 /*
 Implementation of MAG algorithm described in https://digital-library.theiet.org/content/journals/10.1049/ip-cds_19941191
@@ -18,7 +19,7 @@ using namespace std;
 /*
     To not work with overflow
 */
-const uint64_t MAX = 65536;
+const uint64_t MAX = 1048576;
 
 /*
     Global map of integers and their cost
@@ -120,12 +121,12 @@ vector<uint64_t> get1cost(const vector<uint64_t>& cost0) {
     vector<uint64_t> cost1;
     cost1.reserve(cost0size + cost0size);
     for (uint64_t i = 0; i < cost0size; i++) {
-        if (status_of_new_int(cost0[i] - 1, 1)) {
+        if (status_of_new_int(cost0[i] - 1, 1) == 2) {
             cost1.push_back(cost0[i] - 1);
             already_found.insert({cost0[i] - 1, 1});
         }
 
-        if (status_of_new_int(cost0[i] + 1, 1)) {
+        if (status_of_new_int(cost0[i] + 1, 1) == 2) {
             cost1.push_back(cost0[i] + 1);
             already_found.insert({cost0[i] + 1, 1});
         }
@@ -138,6 +139,14 @@ vector<uint64_t> get1cost(const vector<uint64_t>& cost0) {
 
 
 void concider_integer_cost(uint64_t consider, vector<uint64_t> maybe_fundamental, vector<uint64_t>& int_vector, uint64_t cost) {
+    if (consider == 0) {
+        return;
+    }
+
+    while(consider % 2 == 0) {
+        consider /= 2;
+    }
+
     if (uint64_t status = status_of_new_int(consider, cost)) {
         if (status == 2) {
             int_vector.push_back(consider);
@@ -147,7 +156,7 @@ void concider_integer_cost(uint64_t consider, vector<uint64_t> maybe_fundamental
             while (fundamental % 2 == 0) {
                 fundamental /= 2;
             }
-            add_fundamental_to(fundamental, consider, cost + 1);
+            add_fundamental_to(fundamental, consider, cost);
         }
     }
 }
@@ -197,7 +206,6 @@ vector<uint64_t> get3cost(const vector<uint64_t>& cost0, const vector<uint64_t>&
     vector<uint64_t> cost3;
     cost3.reserve(cost1size * cost1size * cost0size * 4 + cost0size * cost2size * 12);
 
-
     cout << "Counting combination of cost2 + fundamental" << endl;
     // combination fo cost2 + fundamental
     for (uint64_t i = 0; i < cost0size; i++) {
@@ -209,7 +217,6 @@ vector<uint64_t> get3cost(const vector<uint64_t>& cost0, const vector<uint64_t>&
                 concider_integer_cost(cost0[i] * fundamental - cost2[j], {cost2[j], fundamental}, cost3, 3);
                 concider_integer_cost(cost0[i] * fundamental + cost2[j], {cost2[j], fundamental}, cost3, 3);
             }
-
         }
     }
 
@@ -251,7 +258,6 @@ vector<uint64_t> get3cost(const vector<uint64_t>& cost0, const vector<uint64_t>&
     update_2i(cost0, cost3, cost3, 3);
     return std::move(cost3);
 }
-
 
 
 void concider_terminating(uint64_t consider, vector<uint64_t>& consider_terminating) {
@@ -377,20 +383,60 @@ vector<uint64_t> get4cost(const vector<uint64_t>& cost0, const vector<uint64_t>&
 
 int main() {
 
-    vector<uint64_t> cost0 = get0cost(16);
+    vector<uint64_t> cost0 = get0cost(20);
     cout << "cost0 filled " << cost0.size() << endl;
+   /* set<uint64_t> cost00;
+    for (auto x : cost0) {
+        cost00.insert(x);
+    }
+    for (auto x : cost00) {
+        cout << x << ' ';
+    }
+    cout << endl; */
 
     vector<uint64_t> cost1 = get1cost(cost0);
     cout << "cost1 filled " << cost1.size() << endl;
+   /* set<uint64_t> cost11;
+    for (auto x : cost1) {
+        cost11.insert(x);
+    }
+    for (auto x : cost11) {
+        cout << x << ' ';
+    }
+    cout << endl; */
 
     vector<uint64_t> cost2 = get2cost(cost0, cost1);
     cout << "cost2 filled " << cost2.size() << endl;
+    /* set<uint64_t> cost22;
+    for (auto x : cost2) {
+        cost22.insert(x);
+    }
+    for (auto x : cost22) {
+        cout << x << ' ';
+    }
+    cout << endl; */
 
     vector<uint64_t> cost3 = get3cost(cost0, cost1, cost2);
     cout << "cost3 filled " << cost3.size() << endl;
+   /* set<uint64_t> cost33;
+    for (auto x : cost3) {
+        cost33.insert(x);
+    }
+    for (auto x : cost33) {
+        cout << x << ' ';
+    }
+    cout << endl; */
 
     vector<uint64_t> cost4 = get4cost(cost0, cost1, cost2, cost3);
-    cout << "cost4 filled " << cost4.size() << endl;
+   /* cout << "cost4 filled " << cost4.size() << endl;
+    set<uint64_t> cost44;
+    for (auto x : cost4) {
+        cost44.insert(x);
+    }
+    for (auto x : cost44) {
+        cout << x << ' ';
+    }
+    cout << endl; */
 
     cout << already_found.size() << endl;
     vector<pair<uint64_t,uint64_t> > ans;
