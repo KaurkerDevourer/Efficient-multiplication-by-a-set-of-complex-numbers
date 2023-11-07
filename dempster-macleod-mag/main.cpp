@@ -32,6 +32,12 @@ unordered_map<uint64_t, uint64_t> already_found;
 */
 unordered_map<uint64_t, unordered_set<uint64_t> > fundamentals[5];
 void add_fundamental_to(uint64_t fundamental, uint64_t to, int lvl) {
+    while (fundamental % 2 == 0) {
+        fundamental /= 2;
+    }
+    while (to % 2 == 0) {
+        to /= 2;
+    }
     if (fundamentals[lvl].find(to) != fundamentals[lvl].end()) {
         fundamentals[lvl][to].insert(fundamental);
     } else {
@@ -41,6 +47,9 @@ void add_fundamental_to(uint64_t fundamental, uint64_t to, int lvl) {
 }
 
 const unordered_set<uint64_t> get_fundamentals(uint64_t of, int lvl) {
+    while (of % 2 == 0) {
+        of /= 2;
+    }
     if (fundamentals[lvl].find(of) != fundamentals[lvl].end()) {
         return fundamentals[lvl][of];
     } else {
@@ -48,44 +57,13 @@ const unordered_set<uint64_t> get_fundamentals(uint64_t of, int lvl) {
     }
 }
 
-
-void update_2i(const vector<uint64_t> cost0, const vector<uint64_t> updater, vector<uint64_t>& to_update, int cost) {
-    for (uint64_t i = 0; i < updater.size(); i++) {
-        uint64_t upd = updater[i];
-        const unordered_set<uint64_t> fundamentals_set = get_fundamentals(updater[i], cost);
-        while(upd % 2 == 0) {
-            upd /= 2;
-            if (already_found.find(upd) == already_found.end()) {
-                to_update.push_back(upd);
-                already_found.insert({upd, cost});
-                for (auto fundamental : fundamentals_set) {
-                    add_fundamental_to(fundamental, upd, cost);
-                }
-            }
-        }
-        for (uint64_t j = 0; j < cost0.size(); j++) {
-            uint64_t current_value = cost0[j] * updater[i];
-            if (current_value >= MAX) {
-                break;
-            }
-            if (already_found.find(current_value) == already_found.end()) {
-                to_update.push_back(current_value);
-                already_found.insert({current_value, cost});
-                for (auto fundamental : fundamentals_set) {
-                    add_fundamental_to(fundamental, current_value, cost);
-                }
-            }
-        }
-    }
-}
-
 /*
     Filling 0 cost vector -> 2^i
 */
 vector<uint64_t> get0cost(size_t bits) {
-    vector<uint64_t> cost0(bits + 1);
-    for (uint64_t i = 0; i <= bits; i++) {
-        cost0[i] = (1 << i);
+    vector<uint64_t> cost0(bits);
+    for (uint64_t i = 0; i < bits; i++) {
+        cost0[i] = (1ll << i);
         already_found.insert({cost0[i], 0});
     }
 
@@ -133,12 +111,12 @@ vector<uint64_t> get1cost(const vector<uint64_t>& cost0) {
     }
     cost1.shrink_to_fit();
 
-    update_2i(cost0, cost1, cost1, 1);
     return std::move(cost1);
 }
 
 
-void concider_integer_cost(uint64_t consider, vector<uint64_t> maybe_fundamental, vector<uint64_t>& int_vector, uint64_t cost) {
+void concider_integer_cost(uint64_t consider, vector<uint64_t> maybe_fundamental, vector<uint64_t>& int_vector, uint64_t cost, bool debug = false) {
+    auto was_consider = consider;
     if (consider == 0) {
         return;
     }
@@ -147,15 +125,16 @@ void concider_integer_cost(uint64_t consider, vector<uint64_t> maybe_fundamental
         consider /= 2;
     }
 
+    if (consider == 889 && debug) {
+        cout << "DEBUG: " << was_consider << endl;
+    }
+
     if (uint64_t status = status_of_new_int(consider, cost)) {
         if (status == 2) {
             int_vector.push_back(consider);
             already_found.insert({consider, cost});
         }
         for (auto fundamental : maybe_fundamental) {
-            while (fundamental % 2 == 0) {
-                fundamental /= 2;
-            }
             add_fundamental_to(fundamental, consider, cost);
         }
     }
@@ -176,19 +155,19 @@ vector<uint64_t> get2cost(const vector<uint64_t>& cost0, const vector<uint64_t>&
     cost2.reserve(cost0size * cost1size * 8);
     for (uint64_t i = 0; i < cost0size; i++) {
         for (uint64_t j = 0; j < cost1size; j++) {
-            concider_integer_cost(cost0[i] * cost1[j] - 1, {cost1[j]}, cost2, 2);
-            concider_integer_cost(cost0[i] * cost1[j] + 1, {cost1[j]}, cost2, 2);
-            concider_integer_cost(cost0[i] + cost1[j], {cost1[j]}, cost2, 2);
-            concider_integer_cost(cost0[i] - cost1[j], {cost1[j]}, cost2, 2);
-            concider_integer_cost(-cost0[i] + cost1[j], {cost1[j]}, cost2, 2);
+            bool debug = (cost1[j] == 31);
+            concider_integer_cost(cost0[i] * cost1[j] - 1, {cost1[j]}, cost2, 2, debug);
+            concider_integer_cost(cost0[i] * cost1[j] + 1, {cost1[j]}, cost2, 2, debug);
+            concider_integer_cost(cost0[i] + cost1[j], {cost1[j]}, cost2, 2, debug);
+            concider_integer_cost(cost0[i] - cost1[j], {cost1[j]}, cost2, 2, debug);
+            concider_integer_cost(-cost0[i] + cost1[j], {cost1[j]}, cost2, 2, debug);
             //concider_integer_cost(-cost0[i] - cost1[j], {cost1[j]}, cost2, 2); // should never be added as it is < 0
-            concider_integer_cost(cost0[i] * cost1[j] - cost1[j], {cost1[j]}, cost2, 2);
-            concider_integer_cost(cost0[i] * cost1[j] + cost1[j], {cost1[j]}, cost2, 2);
+            concider_integer_cost(cost0[i] * cost1[j] - cost1[j], {cost1[j]}, cost2, 2, debug);
+            concider_integer_cost(cost0[i] * cost1[j] + cost1[j], {cost1[j]}, cost2, 2, debug);
         }
     }
     cost2.shrink_to_fit();
 
-    update_2i(cost0, cost2, cost2, 2);
     return std::move(cost2);
 }
 
@@ -210,7 +189,7 @@ vector<uint64_t> get3cost(const vector<uint64_t>& cost0, const vector<uint64_t>&
     // combination fo cost2 + fundamental
     for (uint64_t i = 0; i < cost0size; i++) {
         for (uint64_t j = 0; j < cost2size; j++) {
-            const unordered_set<uint64_t> fundamentals_set = get_fundamentals(cost2[i], 2);
+            const unordered_set<uint64_t> fundamentals_set = get_fundamentals(cost2[j], 2);
             for (auto fundamental : fundamentals_set) {
                 concider_integer_cost(cost0[i] * cost2[j] - fundamental, {cost2[j], fundamental}, cost3, 3);
                 concider_integer_cost(cost0[i] * cost2[j] + fundamental, {cost2[j], fundamental}, cost3, 3);
@@ -224,7 +203,7 @@ vector<uint64_t> get3cost(const vector<uint64_t>& cost0, const vector<uint64_t>&
     // combination of two cost1
     for (uint64_t i = 0; i < cost1size; i++) {
         for (uint64_t j = 0; j < cost1size; j++) {
-            if (i == j) {
+            if (cost1[i] == cost1[j]) {
                 continue;
             }
             for (uint64_t k = 0; k < cost0size; k++) {
@@ -255,12 +234,19 @@ vector<uint64_t> get3cost(const vector<uint64_t>& cost0, const vector<uint64_t>&
 
     cost3.shrink_to_fit();
 
-    update_2i(cost0, cost3, cost3, 3);
     return std::move(cost3);
 }
 
 
 void concider_terminating(uint64_t consider, vector<uint64_t>& consider_terminating) {
+    if (consider == 0) {
+        return;
+    }
+
+    while(consider % 2 == 0) {
+        consider /= 2;
+    }
+
     if (status_of_new_int(consider, 2)) {
         consider_terminating.push_back(consider);
     }
@@ -303,7 +289,7 @@ vector<uint64_t> get4cost(const vector<uint64_t>& cost0, const vector<uint64_t>&
     // combination fo cost3 + fundamental
     for (uint64_t i = 0; i < cost0size; i++) {
         for (uint64_t j = 0; j < cost3size; j++) {
-            const unordered_set<uint64_t> fundamentals_set = get_fundamentals(cost3[i], 3);
+            const unordered_set<uint64_t> fundamentals_set = get_fundamentals(cost3[j], 3);
             for (auto fundamental : fundamentals_set) {
                 concider_integer_cost(cost0[i] * cost3[j] - fundamental, {}, cost4, 4);
                 concider_integer_cost(cost0[i] * cost3[j] + fundamental, {}, cost4, 4);
@@ -376,7 +362,6 @@ vector<uint64_t> get4cost(const vector<uint64_t>& cost0, const vector<uint64_t>&
         }
     }
 
-    update_2i(cost0, cost4, cost4, 4);
     return std::move(cost4);
 }
 
@@ -385,7 +370,7 @@ int main() {
 
     vector<uint64_t> cost0 = get0cost(20);
     cout << "cost0 filled " << cost0.size() << endl;
-   /* set<uint64_t> cost00;
+    /*set<uint64_t> cost00;
     for (auto x : cost0) {
         cost00.insert(x);
     }
@@ -396,29 +381,29 @@ int main() {
 
     vector<uint64_t> cost1 = get1cost(cost0);
     cout << "cost1 filled " << cost1.size() << endl;
-   /* set<uint64_t> cost11;
+    /*set<uint64_t> cost11;
     for (auto x : cost1) {
         cost11.insert(x);
     }
     for (auto x : cost11) {
         cout << x << ' ';
     }
-    cout << endl; */
+    cout << endl;*/
 
     vector<uint64_t> cost2 = get2cost(cost0, cost1);
     cout << "cost2 filled " << cost2.size() << endl;
-    /* set<uint64_t> cost22;
+    /*set<uint64_t> cost22;
     for (auto x : cost2) {
         cost22.insert(x);
     }
     for (auto x : cost22) {
         cout << x << ' ';
     }
-    cout << endl; */
+    cout << endl;*/
 
     vector<uint64_t> cost3 = get3cost(cost0, cost1, cost2);
     cout << "cost3 filled " << cost3.size() << endl;
-   /* set<uint64_t> cost33;
+    /*set<uint64_t> cost33;
     for (auto x : cost3) {
         cost33.insert(x);
     }
@@ -445,14 +430,21 @@ int main() {
         ans.push_back(x);
     }
     sort(ans.begin(), ans.end());
-    int now = 1;
+    int now = 3;
     for (int i = 0; i < ans.size(); i++) {
-        if (ans[i].first != i + now) {
-            cout << "First number is: " << i + 1 << endl;
+        if (ans[i].second == 0) {
+            continue;
+        }
+        if (ans[i].first != now) {
+            cout << "First number is: " << now << endl;
             break;
         }
+        now += 2;
     }
     for (uint64_t i = 0; i < ans.size(); i++) {
+        if (ans[i].second == 0 && ans[i].first != 1) {
+            continue;
+        }
         cout << ans[i].first << ' ' << ans[i].second << endl;
     }
 
